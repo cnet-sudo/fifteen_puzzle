@@ -1,0 +1,49 @@
+# Visual Studio-файлы
+.vs/
+*.vcxproj.user
+*.suo
+*.ncb
+*.sdf
+*.opendb
+*.VC.db
+*.VC.VC.opendb
+
+# Build-артефакты
+Debug/
+Release/
+x64/
+x86/
+*.obj
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.lib
+*.exp
+*.idb
+*.ipdb
+*.iobj
+*.tlb
+*.tli
+*.tlh
+*.map
+*.log
+
+# Кэшированные файлы и временные
+*.tlog
+*.lastbuildstate
+*.userprefs
+*.pch
+*.res
+
+# CMake (если используешь)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Конфигурационные файлы среды
+*.code-workspace
+*.swp
+*.swn
+*.swo

@@ -1,14 +1,16 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by меню пятнашки.rc
+#pragma once
 
-// Следующие стандартные значения для новых объектов
-// 
-#ifdef APSTUDIO_INVOKED
-#ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        101
-#define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1001
-#define _APS_NEXT_SYMED_VALUE           101
-#endif
-#endif
+#define IDR_TEXTURE1   102  // Изображение PNG
+#define IDR_TEXTURE2   103  // Изображение PNG
+#define IDR_TEXTURE3   104  // Изображение PNG
+#define IDR_TEXTURE4   105  // Изображение PNG
+#define IDR_TEXTURE5   106  // Изображение PNG
+
+#define IDR_FONT1      201  // Шрифт
+#define IDR_FONT2      202  // Шрифт
+
+#define IDR_SOUND1     301  // Звук
+
+#define IDR_ICON1      401  // Иконка
+
+

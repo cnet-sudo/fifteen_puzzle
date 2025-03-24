@@ -1,51 +1,67 @@
 #include "GameScreen.h"
 #include <iostream>
 #include <string>
+#include "ResourceManager.h"
 
 constexpr float TITLE_Y_POS = 15.0f;
 
 GameScreen::GameScreen(sf::RenderWindow& window, GameState& state, Transition& transition)
     : window(window)
     , state(state)
-    , transition(transition) // Инициализируем ссылку на Transition
+    , transition(transition)
     , puzzle(std::make_unique<FifteenPuzzle>(100, 4))
-    , isGameStarted(false) // Игра еще не началась
+    , isGameStarted(false)
 {
-    if (!font.loadFromFile("arial.ttf")) {
-        std::cerr << "Ошибка: Не удалось загрузить шрифт 'arial.ttf'.\n";
+    // Получаем экземпляр ResourceManager
+    ResourceManager& rm = ResourceManager::getInstance();
+
+    // Получение шрифтов из ResourceManager
+    sf::Font& font = rm.getFont("font");    // Предполагается "font" - это arial.ttf
+    sf::Font& font2 = rm.getFont("font1");  // Предполагается "font1" - это glv.ttf
+
+    // Проверка успешной загрузки шрифтов
+    if (font.getInfo().family.empty()) {
+        std::cerr << "Ошибка: Не удалось загрузить шрифт 'font' из ResourceManager.\n";
+        throw std::runtime_error("Не удалось загрузить шрифт 'font' из ResourceManager");
+    }
+    if (font2.getInfo().family.empty()) {
+        throw std::runtime_error("Не удалось загрузить шрифт 'font1' из ResourceManager");
     }
 
-    if (!backgroundTexture.loadFromFile("background1.png")) {
-        std::cerr << "Ошибка: Не удалось загрузить фон 'background.jpg'.\n";
+    // Загрузка текстуры фона из ResourceManager
+    sf::Texture& bgTexture = rm.getTexture("background1");
+    if (bgTexture.getSize().x == 0) {  // Проверка на пустую текстуру
+        std::cerr << "Ошибка: Не удалось загрузить фон 'background1' из ResourceManager.\n";
     }
-    if (!font2.loadFromFile("glv.ttf")) throw std::runtime_error("Failed to load font glv.ttf");
-    backgroundSprite.setTexture(backgroundTexture);
+    backgroundSprite.setTexture(bgTexture);
 
-    // Создаем кнопку "Вернуться в главное меню" с 12 аргументами
+    // Создаем кнопку "Вернуться в главное меню"
     exitButton = std::make_unique<Button>(
-        std::wstring(L"м е н ю"), // Явное преобразование в std::wstring
-        sf::Vector2f(445, 600),            // Позиция кнопки
-        font,                              // Шрифт
-        sf::Color(64, 224, 208, 255),      // Непрозрачный бирюзовый цвет кнопки (обычное состояние)
+        std::wstring(L"м е н ю"),
+        sf::Vector2f(445, 600),
+        font,
+        sf::Color(64, 224, 208, 255),  // Непрозрачный бирюзовый цвет кнопки
         sf::Color(64, 224, 208, 255),
-        sf::Color::Black,                  // Цвет текста
-        sf::Color(128, 128, 128),          // Цвет текста при нажатии
-        395.0f,                            // Ширина кнопки
-        50.0f,                             // Высота кнопки
-        30u,                               // Размер шрифта (unsigned int)
-        sf::Color::Black,                  // Цвет контура (добавлен)
-        4.0f                               // Толщина контура (добавлен)
+        sf::Color::Black,              // Цвет текста
+        sf::Color(128, 128, 128),      // Цвет текста при нажатии
+        395.0f,                        // Ширина кнопки
+        50.0f,                         // Высота кнопки
+        30u,                           // Размер шрифта
+        sf::Color::Black,              // Цвет контура
+        4.0f                           // Толщина контура
     );
 
-	text.setFont(font);
+    text.setFont(font);
 
     puzzle->setPosition(
         (window.getSize().x - puzzle->getBounds().width) / 2.0f,
         150.0f
     );
+
     // Инициализация заголовка через новый класс
-    titleText = std::make_unique<ColorfulText>(font2, L"Пятнашки", 100,
+    titleText = std::make_unique<ColorfulText>("font1", L"Пятнашки", 100,
         sf::Vector2f(0, TITLE_Y_POS), window, true, false);
+
     textBackground.setFillColor(sf::Color(255, 255, 255, 200)); // Белый с прозрачностью
 
     // Настройка текста таймера
@@ -54,15 +70,16 @@ GameScreen::GameScreen(sf::RenderWindow& window, GameState& state, Transition& t
     timerText.setFillColor(sf::Color::Red);
     timerText.setPosition(
         puzzle->getBounds().left + puzzle->getBounds().width + 50.0f, // Справа от поля
-		puzzle->getBounds().top + 200.0f // Вверх от поля
+        puzzle->getBounds().top + 200.0f // Вверх от поля
     );
+
     // Настройка фона таймера
-    timerBackground.setFillColor(sf::Color(255, 255, 255, 128)); // Белый с 50% прозрачностью (128 из 255)
+    timerBackground.setFillColor(sf::Color(255, 255, 255, 128)); // Белый с 50% прозрачностью
     sf::FloatRect timerRect = timerText.getLocalBounds();
     timerBackground.setSize(sf::Vector2f(timerRect.width + 20.0f, timerRect.height + 40.0f)); // Отступ 20 пикселей
     timerBackground.setPosition(
         timerText.getPosition().x - 10.0f, // Учитываем отступ
-        timerText.getPosition().y 
+        timerText.getPosition().y
     );
 }
 
@@ -97,16 +114,15 @@ void GameScreen::handleEvent(const sf::Event& event) {
     }
 
     puzzle->handleEvent(event, window);
-    
+
     if (puzzle->isSolved()) {
         text.setString(L"                   Победа!!! \n"
-                       L"Нажмите Esc или кнопку меню !"
-                );
+            L"Нажмите Esc или кнопку меню !");
         text.setFillColor(sf::Color::Red);
         sf::FloatRect textRect = text.getLocalBounds();
         text.setOrigin(textRect.width / 2.0f, textRect.height / 2.0f);
         text.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
-		text.setCharacterSize(50);
+        text.setCharacterSize(50);
 
         // Настройка фона под текст
         textBackground.setSize(sf::Vector2f(textRect.width + 40, textRect.height + 40)); // Отступ 40 пикселей
@@ -116,7 +132,7 @@ void GameScreen::handleEvent(const sf::Event& event) {
 
     // Рестарт игры по клавише R
     if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
-		restartGame();
+        restartGame();
     }
 }
 
@@ -161,7 +177,7 @@ void GameScreen::update(float deltaTime) {
         timerBackground.setSize(sf::Vector2f(timerRect.width + 20.0f, timerRect.height + 20.0f));
         timerBackground.setPosition(
             timerText.getPosition().x - 10.0f,
-            timerText.getPosition().y 
+            timerText.getPosition().y
         );
     }
 }

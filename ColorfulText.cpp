@@ -1,10 +1,20 @@
 // ColorfulText.cpp
 #include "ColorfulText.h"
+#include "ResourceManager.h"
 
-ColorfulText::ColorfulText(sf::Font& font_ref, const std::wstring& text, unsigned int charSize,
+ColorfulText::ColorfulText(const std::string& fontId, const std::wstring& text, unsigned int charSize,
     const sf::Vector2f& position, const sf::RenderWindow& window,
     bool centerHorizontally, bool centerVertically)
-    : font(font_ref), colorTimer(0.0f) {
+    : colorTimer(0.0f) {
+
+    // Получаем шрифт из ResourceManager по идентификатору
+    ResourceManager& rm = ResourceManager::getInstance();
+    font = &rm.getFont(fontId);
+
+    // Проверка, что шрифт успешно загружен
+    if (font->getInfo().family.empty()) {
+        throw std::runtime_error("Не удалось загрузить шрифт с ID: " + fontId + " из ResourceManager");
+    }
 
     float totalWidth = text.length() * charSize * 0.8f; // Примерный расчет ширины
     float xPos = position.x;
@@ -19,7 +29,7 @@ ColorfulText::ColorfulText(sf::Font& font_ref, const std::wstring& text, unsigne
 
     for (size_t i = 0; i < text.length(); i++) {
         sf::Text letter;
-        letter.setFont(font);
+        letter.setFont(*font);
         letter.setString(text[i]);
         letter.setCharacterSize(charSize);
         letter.setFillColor(sf::Color::Magenta);

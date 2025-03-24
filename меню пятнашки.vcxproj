@@ -143,6 +143,7 @@
     <ClCompile Include="FifteenPuzzle.cpp" />
     <ClCompile Include="GameScreen.cpp" />
     <ClCompile Include="MainMenu.cpp" />
+    <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="RulesScreen.cpp" />
     <ClCompile Include="Transition.cpp" />
     <ClCompile Include="fifteen_puzzle.cpp" />
@@ -155,15 +156,12 @@
     <ClInclude Include="GameState.h" />
     <ClInclude Include="MainMenu.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="resource1.h" />
+    <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="RulesScreen.h" />
     <ClInclude Include="Transition.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="puzzle.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Resource.rc" />
+    <ResourceCompile Include="fifteen_puzzle.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

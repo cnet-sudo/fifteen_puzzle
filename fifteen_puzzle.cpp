@@ -4,21 +4,57 @@
 #include "MainMenu.h"
 #include "GameScreen.h"
 #include "RulesScreen.h"
+#include "ResourceManager.h"
+#include "resource.h"
 
 constexpr unsigned int WINDOW_WIDTH = 1280;
 constexpr unsigned int WINDOW_HEIGHT = 720;
 constexpr float MAX_DELTA_TIME = 1.0f / 30.0f; // Ограничение дельта-времени
 
+void initializeResources() {
+    ResourceManager& rm = ResourceManager::getInstance();
+    if (!rm.loadTexture("puzzle", IDR_TEXTURE1)) {
+        throw std::runtime_error("Не удалось загрузить текстуру 'puzzle'");
+    }
+    if (!rm.loadTexture("background", IDR_TEXTURE2)) {
+        throw std::runtime_error("Не удалось загрузить текстуру 'background'");
+    }
+    if (!rm.loadTexture("background1", IDR_TEXTURE3)) {
+        throw std::runtime_error("Не удалось загрузить текстуру 'background1'");
+    }
+    if (!rm.loadTexture("background2", IDR_TEXTURE4)) {
+        throw std::runtime_error("Не удалось загрузить текстуру 'background2'");
+    }
+    if (!rm.loadTexture("numbers", IDR_TEXTURE5)) {
+        throw std::runtime_error("Не удалось загрузить текстуру 'background2'");
+    }
+    if (!rm.loadMusic("music", IDR_SOUND1)) {
+        throw std::runtime_error("Не удалось загрузить звук 'music'");
+    }
+
+    if (!rm.loadFont("font", IDR_FONT1)) {
+        throw std::runtime_error("Не удалось загрузить шрифт 'font'");
+    }
+    if (!rm.loadFont("font1", IDR_FONT2)) {
+        throw std::runtime_error("Не удалось загрузить шрифт 'font1'");
+    }
+    
+}
+
+
+
 int main() {
+	system("chcp 1251"); // Установка кодовой страницы windows-1251 в консоли   
     try {
+        initializeResources();
         // Создаем окно игры
         sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), L"Пятнашки");
         window.setFramerateLimit(60); // Ограничение FPS для плавности
 
-        // Загружаем иконку
-        sf::Image icon;
-        if (!icon.loadFromFile("puzzle.png")) {
-            throw std::runtime_error("Ошибка: не удалось загрузить puzzle.png!");
+        ResourceManager& rm = ResourceManager::getInstance();
+        sf::Image icon = rm.getImage("puzzle");
+        if (icon.getSize().x == 0 || icon.getSize().y == 0) { // Проверка, загружено ли изображение
+            throw std::runtime_error("Ошибка: не удалось загрузить иконку 'puzzle' из ресурсов!");
         }
         window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 

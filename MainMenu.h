@@ -24,7 +24,7 @@ private:
     std::unique_ptr<Button> restartButton; 
     std::unique_ptr<Button> exitButton;    
     std::unique_ptr<ColorfulText> titleText;
-    sf::Music music;
+    sf::Music* music;
     bool isMusicOn;
     bool useTexture;
     GameScreen& gameScreen; // Добавляем ссылку на GameScreen

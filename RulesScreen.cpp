@@ -1,37 +1,44 @@
 #include "RulesScreen.h"
 #include <stdexcept>
 #include <iostream>
+#include "ResourceManager.h"
 
 constexpr float TITLE_Y_POS = 15.0f;
 
 RulesScreen::RulesScreen(sf::RenderWindow& window, GameState& state, Transition& transition)
     : window(window), state(state), transition(transition) {
-    // Загрузка текстуры фона
-    if (!backgroundTexture.loadFromFile("background1.png")) {
-        std::cerr << "Ошибка: Не удалось загрузить фон 'background1.png'.\n";
-    }
-    backgroundSprite.setTexture(backgroundTexture);
+    // Получаем экземпляр ResourceManager
+    ResourceManager& rm = ResourceManager::getInstance();
 
-    // Загрузка шрифта arial
-    if (!font.loadFromFile("arial.ttf")) {
-        throw std::runtime_error("Не удалось загрузить шрифт arial.ttf");
+    // Загрузка текстуры фона из ResourceManager
+    sf::Texture& bgTexture = rm.getTexture("background1");
+    if (bgTexture.getSize().x == 0) {  // Проверка на пустую текстуру
+        std::cerr << "Ошибка: Не удалось загрузить фон 'background1' из ResourceManager.\n";
     }
+    backgroundSprite.setTexture(bgTexture);
 
-    // Загрузка шрифта для заголовка (как в GameScreen)
-    if (!font2.loadFromFile("glv.ttf")) {
-        throw std::runtime_error("Не удалось загрузить шрифт glv.ttf");
+    // Получение шрифтов из ResourceManager
+    sf::Font& font = rm.getFont("font");    // Предполагается "font" - это arial.ttf
+    sf::Font& font2 = rm.getFont("font1");  // Предполагается "font1" - это glv.ttf
+
+    // Проверка успешной загрузки шрифтов
+    if (font.getInfo().family.empty()) {
+        throw std::runtime_error("Не удалось загрузить шрифт 'font' из ResourceManager");
+    }
+    if (font2.getInfo().family.empty()) {
+        throw std::runtime_error("Не удалось загрузить шрифт 'font1' из ResourceManager");
     }
 
     // Настройка заголовка с изменением цвета
-    titleText = std::make_unique<ColorfulText>(font2, L"Правила игры", 100,
+    titleText = std::make_unique<ColorfulText>("font1", L"Пятнашки", 100,
         sf::Vector2f(0, TITLE_Y_POS), window, true, false);
 
-    // Настройка текста с правилами (группа цифр заменена на изображение)
+    // Настройка текста с правилами
     text.setFont(font);
     text.setString(
-        L"   1. Игровое поле состоит из 15 пронумерованных\n" 
+        L"   1. Игровое поле состоит из 15 пронумерованных\n"
         L"   плиток и одного пустого места.\n"
-		L"   2. Цель игры перемещая плитки, расположить\n"
+        L"   2. Цель игры перемещая плитки, расположить\n"
         L"   их в правильном порядке: (см. изображение справа)\n"
         L"   3. Перемещать можно только плитки,\n"
         L"   соседние с пустым местом.\n"
@@ -45,7 +52,7 @@ RulesScreen::RulesScreen(sf::RenderWindow& window, GameState& state, Transition&
     // Центрирование текста
     sf::FloatRect textRect = text.getLocalBounds();
     text.setOrigin(0, text.getLocalBounds().height / 2.0f); // Убираем центрирование по X
-    text.setPosition(30.0f, window.getSize().y / 2.0f ); // Устанавливаем ближе к левому краю (20 пикселей от края)
+    text.setPosition(30.0f, window.getSize().y / 2.0f); // Устанавливаем ближе к левому краю
 
     // Создание полупрозрачного светлого фона под текст
     textBackground.setSize(sf::Vector2f(textRect.width + 40, textRect.height + 60));
@@ -53,17 +60,17 @@ RulesScreen::RulesScreen(sf::RenderWindow& window, GameState& state, Transition&
     textBackground.setOrigin(0, textBackground.getSize().y / 2.0f); // Убираем центрирование по X
     textBackground.setPosition(20.0f, window.getSize().y / 2.0f + 10.0f); // Синхронизация с текстом
 
-    // Загрузка изображения с цифрами
-    if (!numbersTexture.loadFromFile("numbers.png")) {
-        std::cerr << "Ошибка: Не удалось загрузить изображение 'numbers.png'.\n";
+    // Загрузка изображения с цифрами из ResourceManager
+    sf::Texture& numTexture = rm.getTexture("numbers");
+    if (numTexture.getSize().x == 0) {  // Проверка на пустую текстуру
+        std::cerr << "Ошибка: Не удалось загрузить изображение 'numbers' из ResourceManager.\n";
     }
-    numbersSprite.setTexture(numbersTexture);
+    numbersSprite.setTexture(numTexture);
     sf::FloatRect numbersRect = numbersSprite.getLocalBounds();
     numbersSprite.setOrigin(numbersRect.width / 2.0f, numbersRect.height / 2.0f);
-    // Уменьшение изображения на 10 % (масштаб 0.9)
-        numbersSprite.setScale(0.9f, 0.9f);
-    // Смещение вправо: установка позиции ближе к правому краю окна
-    numbersSprite.setPosition(window.getSize().x * 0.75f+100, window.getSize().y / 2.0f );
+    numbersSprite.setScale(0.9f, 0.9f); // Уменьшение изображения на 10%
+    numbersSprite.setPosition(window.getSize().x * 0.75f + 100, window.getSize().y / 2.0f);
+
     // Создание кнопки в стиле GameScreen
     backButton = std::make_unique<Button>(
         std::wstring(L"м е н ю"),

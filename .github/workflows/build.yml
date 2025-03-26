@@ -2,9 +2,9 @@ name: Build Fifteen Puzzle
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -15,84 +15,52 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2. Проверяем наличие CMakeLists.txt
-    - name: Check for CMakeLists.txt
-      run: |
-        dir CMakeLists.txt
-        if exist CMakeLists.txt (echo "CMakeLists.txt found!") else (echo "CMakeLists.txt not found!" && exit 1)
-      shell: cmd
-
-    # 3. Устанавливаем CMake
+    # 2. Устанавливаем CMake
     - name: Install CMake
       run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
       shell: cmd
 
-    # 4. Проверяем наличие Visual Studio
-    - name: Check Visual Studio installation
-      run: |
-        dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
-        if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC" (echo "Visual Studio found!") else (echo "Visual Studio not found!" && exit 1)
-      shell: cmd
-
-    # 5. Устанавливаем vcpkg и SFML
+    # 3. Устанавливаем vcpkg и SFML
     - name: Install vcpkg and SFML
       run: |
-        rmdir /S /Q C:\vcpkg || echo "No vcpkg directory to remove"
-        echo "Cloning vcpkg..."
-        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg --branch master || (echo "Failed to clone vcpkg!" && exit 1)
-        pushd C:\vcpkg
-        echo "Current directory after pushd:"
-        cd
-        dir
-        if exist bootstrap-vcpkg.bat (echo "bootstrap-vcpkg.bat found!") else (echo "bootstrap-vcpkg.bat not found!" && exit 1)
-        .\bootstrap-vcpkg.bat --verbose
-        if exist vcpkg.exe (echo "vcpkg.exe created!") else (echo "vcpkg.exe not created!" && exit 1)
-        echo "Installing SFML..."
-        .\vcpkg.exe install sfml:x64-windows --recurse --clean-after-build --debug || (echo "Failed to install SFML!" && exit 1)
-        echo "Integrating vcpkg..."
-        .\vcpkg.exe integrate install || (echo "Failed to integrate vcpkg!" && exit 1)
-        popd
+        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+        cd C:\vcpkg
+        bootstrap-vcpkg.bat
+        vcpkg.exe install sfml:x64-windows --recurse
+        vcpkg.exe integrate install
       shell: cmd
 
-    # 6. Диагностика: Проверяем, установлена ли SFML
-    - name: Check SFML installation
+    # 4. Проверяем, что SFML установлен
+    - name: Verify SFML installation
       run: |
-        dir C:\vcpkg\installed\x64-windows\lib
-        if exist C:\vcpkg\installed\x64-windows\lib\sfml-graphics.lib (echo "SFML installed!") else (echo "SFML not installed!" && exit 1)
+        if exist C:\vcpkg\installed\x64-windows\lib\sfml-graphics.lib (echo "SFML installed!") else (exit 1)
       shell: cmd
 
-    # 7. Конфигурируем CMake
+    # 5. Конфигурируем CMake
     - name: Configure CMake
       run: |
         mkdir build
         cd build
-        cmake ../ -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_CXX_STANDARD=20
+        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
       shell: cmd
 
-    # 8. Компилируем проект
+    # 6. Компилируем проект
     - name: Build project
       run: |
         cd build
         cmake --build . --config Release
       shell: cmd
 
-    # 9. Диагностика: Проверяем структуру директорий
-    - name: Debug directory structure
-      run: |
-        dir build
-        dir build\Release
-      shell: cmd
-
-    # 10. Диагностика: Проверяем, существует ли файл
+    # 7. Проверяем, что исполняемый файл создан
     - name: Check for executable
       run: |
-        if exist build\Release\FifteenPuzzle.exe (echo "Executable found!") else (echo "Executable not found!")
+        if exist build\Release\FifteenPuzzle.exe (echo "Build successful!") else (exit 1)
       shell: cmd
 
-    # 11. Загружаем артефакт
+    # 8. Загружаем артефакт (исполняемый файл)
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: FifteenPuzzle-Windows
         path: build/Release/FifteenPuzzle.exe
-        if-no-files-found: warn
+        if-no-files-found: error

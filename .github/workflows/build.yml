@@ -27,14 +27,16 @@ jobs:
       run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
       shell: cmd
 
-    # 4. Устанавливаем vcpkg и SFML (без кэширования)
+    # 4. Устанавливаем vcpkg и SFML
     - name: Install vcpkg and SFML
       run: |
         rmdir /S /Q C:\vcpkg || echo "No vcpkg directory to remove"
         echo "Cloning vcpkg..."
-        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg || (echo "Failed to clone vcpkg!" && exit 1)
         cd C:\vcpkg
-        dir bootstrap-vcpkg.bat
+        echo "Current directory after cd:"
+        cd
+        dir
         if exist bootstrap-vcpkg.bat (echo "bootstrap-vcpkg.bat found!") else (echo "bootstrap-vcpkg.bat not found!" && exit 1)
         .\bootstrap-vcpkg.bat
         if exist vcpkg.exe (echo "vcpkg.exe created!") else (echo "vcpkg.exe not created!" && exit 1)

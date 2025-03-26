@@ -45,14 +45,20 @@ jobs:
         cmake --build . --config Release
       shell: cmd
 
-    # 6. Проверяем, существует ли файл (диагностика)
+    # 6. Диагностика: Проверяем структуру директорий
+    - name: Debug directory structure
+      run: |
+        dir build
+        dir build\Release
+      shell: cmd
+
+    # 7. Диагностика: Проверяем, существует ли файл
     - name: Check for executable
       run: |
-        dir build\Release
         if exist build\Release\FifteenPuzzle.exe (echo "Executable found!") else (echo "Executable not found!" && exit 1)
       shell: cmd
 
-    # 7. Загружаем артефакт с более гибким путём
+    # 8. Загружаем артефакт с гибким путём
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:

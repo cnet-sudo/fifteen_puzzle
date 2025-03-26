@@ -32,9 +32,9 @@ jobs:
       run: |
         rmdir /S /Q C:\vcpkg || echo "No vcpkg directory to remove"
         echo "Cloning vcpkg..."
-        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg || (echo "Failed to clone vcpkg!" && exit 1)
-        cd C:\vcpkg
-        echo "Current directory after cd:"
+        git clone https://github.com/microsoft/vcpkg.git C:\vcpkg --branch master || (echo "Failed to clone vcpkg!" && exit 1)
+        pushd C:\vcpkg
+        echo "Current directory after pushd:"
         cd
         dir
         if exist bootstrap-vcpkg.bat (echo "bootstrap-vcpkg.bat found!") else (echo "bootstrap-vcpkg.bat not found!" && exit 1)
@@ -42,6 +42,7 @@ jobs:
         if exist vcpkg.exe (echo "vcpkg.exe created!") else (echo "vcpkg.exe not created!" && exit 1)
         .\vcpkg.exe install sfml:x64-windows --recurse --clean-after-build
         .\vcpkg.exe integrate install
+        popd
       shell: cmd
 
     # 5. Диагностика: Проверяем, установлена ли SFML

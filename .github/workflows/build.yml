@@ -27,24 +27,37 @@ jobs:
       run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
       shell: cmd
 
-    # 4. Устанавливаем vcpkg и SFML
+    # 4. Кэшируем vcpkg
+    - name: Cache vcpkg
+      uses: actions/cache@v3
+      with:
+        path: C:\vcpkg
+        key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+        restore-keys: vcpkg-${{ runner.os }}-
+
+    # 5. Устанавливаем vcpkg и SFML
     - name: Install vcpkg and SFML
       run: |
-        git clone https://github.com/microsoft/vcpkg.git
-        cd vcpkg
-        .\bootstrap-vcpkg.bat
-        .\vcpkg install sfml:x64-windows
+        if not exist C:\vcpkg (
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+          cd C:\vcpkg
+          .\bootstrap-vcpkg.bat
+        ) else (
+          echo "vcpkg already exists, skipping clone"
+          cd C:\vcpkg
+        )
+        .\vcpkg install sfml:x64-windows --recurse --clean-after-build
         .\vcpkg integrate install
       shell: cmd
 
-    # 5. Диагностика: Проверяем, установлена ли SFML
+    # 6. Диагностика: Проверяем, установлена ли SFML
     - name: Check SFML installation
       run: |
         dir C:\vcpkg\installed\x64-windows\lib
         if exist C:\vcpkg\installed\x64-windows\lib\sfml-graphics.lib (echo "SFML installed!") else (echo "SFML not installed!" && exit 1)
       shell: cmd
 
-    # 6. Конфигурируем CMake
+    # 7. Конфигурируем CMake
     - name: Configure CMake
       run: |
         mkdir build
@@ -52,27 +65,27 @@ jobs:
         cmake ../ -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_CXX_STANDARD=20
       shell: cmd
 
-    # 7. Компилируем проект
+    # 8. Компилируем проект
     - name: Build project
       run: |
         cd build
         cmake --build . --config Release
       shell: cmd
 
-    # 8. Диагностика: Проверяем структуру директорий
+    # 9. Диагностика: Проверяем структуру директорий
     - name: Debug directory structure
       run: |
         dir build
         dir build\Release
       shell: cmd
 
-    # 9. Диагностика: Проверяем, существует ли файл
+    # 10. Диагностика: Проверяем, существует ли файл
     - name: Check for executable
       run: |
         if exist build\Release\FifteenPuzzle.exe (echo "Executable found!") else (echo "Executable not found!")
       shell: cmd
 
-    # 10. Загружаем артефакт
+    # 11. Загружаем артефакт
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:

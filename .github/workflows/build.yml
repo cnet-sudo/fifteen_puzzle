@@ -27,7 +27,14 @@ jobs:
       run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
       shell: cmd
 
-    # 4. Устанавливаем vcpkg и SFML
+    # 4. Проверяем наличие Visual Studio
+    - name: Check Visual Studio installation
+      run: |
+        dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
+        if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC" (echo "Visual Studio found!") else (echo "Visual Studio not found!" && exit 1)
+      shell: cmd
+
+    # 5. Устанавливаем vcpkg и SFML
     - name: Install vcpkg and SFML
       run: |
         rmdir /S /Q C:\vcpkg || echo "No vcpkg directory to remove"
@@ -38,21 +45,23 @@ jobs:
         cd
         dir
         if exist bootstrap-vcpkg.bat (echo "bootstrap-vcpkg.bat found!") else (echo "bootstrap-vcpkg.bat not found!" && exit 1)
-        .\bootstrap-vcpkg.bat
+        .\bootstrap-vcpkg.bat --verbose
         if exist vcpkg.exe (echo "vcpkg.exe created!") else (echo "vcpkg.exe not created!" && exit 1)
-        .\vcpkg.exe install sfml:x64-windows --recurse --clean-after-build
-        .\vcpkg.exe integrate install
+        echo "Installing SFML..."
+        .\vcpkg.exe install sfml:x64-windows --recurse --clean-after-build --debug || (echo "Failed to install SFML!" && exit 1)
+        echo "Integrating vcpkg..."
+        .\vcpkg.exe integrate install || (echo "Failed to integrate vcpkg!" && exit 1)
         popd
       shell: cmd
 
-    # 5. Диагностика: Проверяем, установлена ли SFML
+    # 6. Диагностика: Проверяем, установлена ли SFML
     - name: Check SFML installation
       run: |
         dir C:\vcpkg\installed\x64-windows\lib
         if exist C:\vcpkg\installed\x64-windows\lib\sfml-graphics.lib (echo "SFML installed!") else (echo "SFML not installed!" && exit 1)
       shell: cmd
 
-    # 6. Конфигурируем CMake
+    # 7. Конфигурируем CMake
     - name: Configure CMake
       run: |
         mkdir build
@@ -60,27 +69,27 @@ jobs:
         cmake ../ -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_CXX_STANDARD=20
       shell: cmd
 
-    # 7. Компилируем проект
+    # 8. Компилируем проект
     - name: Build project
       run: |
         cd build
         cmake --build . --config Release
       shell: cmd
 
-    # 8. Диагностика: Проверяем структуру директорий
+    # 9. Диагностика: Проверяем структуру директорий
     - name: Debug directory structure
       run: |
         dir build
         dir build\Release
       shell: cmd
 
-    # 9. Диагностика: Проверяем, существует ли файл
+    # 10. Диагностика: Проверяем, существует ли файл
     - name: Check for executable
       run: |
         if exist build\Release\FifteenPuzzle.exe (echo "Executable found!") else (echo "Executable not found!")
       shell: cmd
 
-    # 10. Загружаем артефакт
+    # 11. Загружаем артефакт
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:

@@ -39,15 +39,23 @@ jobs:
     - name: Install vcpkg and SFML
       run: |
         if not exist C:\vcpkg (
+          echo "Cloning vcpkg..."
           git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
           cd C:\vcpkg
           .\bootstrap-vcpkg.bat
         ) else (
-          echo "vcpkg already exists, skipping clone"
+          echo "vcpkg already exists, checking for vcpkg.exe..."
           cd C:\vcpkg
+          if not exist vcpkg.exe (
+            echo "vcpkg.exe not found, running bootstrap-vcpkg.bat..."
+            .\bootstrap-vcpkg.bat
+          ) else (
+            echo "vcpkg.exe found!"
+          )
         )
-        .\vcpkg install sfml:x64-windows --recurse --clean-after-build
-        .\vcpkg integrate install
+        cd C:\vcpkg
+        .\vcpkg.exe install sfml:x64-windows --recurse --clean-after-build
+        .\vcpkg.exe integrate install
       shell: cmd
 
     # 6. Диагностика: Проверяем, установлена ли SFML

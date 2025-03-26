@@ -1,0 +1,53 @@
+name: Build Fifteen Puzzle
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # 1. Клонируем репозиторий
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2. Устанавливаем CMake
+    - name: Install CMake
+      run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+      shell: cmd
+
+    # 3. Устанавливаем vcpkg и SFML
+    - name: Install vcpkg and SFML
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git
+        cd vcpkg
+        .\bootstrap-vcpkg.bat
+        .\vcpkg install sfml:x64-windows
+        .\vcpkg integrate install
+      shell: cmd
+
+    # 4. Конфигурируем CMake с явным указанием C++20
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_CXX_STANDARD=20
+      shell: cmd
+
+    # 5. Компилируем проект
+    - name: Build project
+      run: |
+        cd build
+        cmake --build . --config Release
+      shell: cmd
+
+    # 6. Загружаем артефакт
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: FifteenPuzzle-Windows
+        path: build/Release/FifteenPuzzle.exe

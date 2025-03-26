@@ -1,22 +1,25 @@
 // ColorfulText.cpp
 #include "ColorfulText.h"
 #include "ResourceManager.h"
+#include <algorithm>
+#include <random>
 
-ColorfulText::ColorfulText(const std::string& fontId, const std::wstring& text, unsigned int charSize,
+ColorfulText::ColorfulText(const std::string& fontId, std::wstring_view text, unsigned int charSize,
     const sf::Vector2f& position, const sf::RenderWindow& window,
     bool centerHorizontally, bool centerVertically)
     : colorTimer(0.0f) {
 
     // Получаем шрифт из ResourceManager по идентификатору
     ResourceManager& rm = ResourceManager::getInstance();
-    font = &rm.getFont(fontId);
+    font = std::make_shared<sf::Font>(rm.getFont(fontId));
 
-    // Проверка, что шрифт успешно загружен
+    // Проверка шрифта
     if (font->getInfo().family.empty()) {
-        throw std::runtime_error("Не удалось загрузить шрифт с ID: " + fontId + " из ResourceManager");
+        throw std::runtime_error("Не удалось загрузить шрифт с ID: " + std::string(fontId) + " из ResourceManager");
     }
 
-    float totalWidth = text.length() * charSize * 0.8f; // Примерный расчет ширины
+    // Рассчитываем позицию
+    float totalWidth = text.size() * charSize * 0.8f;
     float xPos = position.x;
     float yPos = position.y;
 
@@ -27,7 +30,9 @@ ColorfulText::ColorfulText(const std::string& fontId, const std::wstring& text, 
         yPos = (window.getSize().y - charSize) / 2.0f;
     }
 
-    for (size_t i = 0; i < text.length(); i++) {
+    // Создаем буквы
+    letters.reserve(text.size());
+    for (size_t i = 0; i < text.size(); ++i) {
         sf::Text letter;
         letter.setFont(*font);
         letter.setString(text[i]);
@@ -49,10 +54,14 @@ void ColorfulText::update(float deltaTime) {
 void ColorfulText::updateColors() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0, 255);
+    static std::uniform_int_distribution<int> dis(0, 255);
 
     for (auto& letter : letters) {
-        letter.setFillColor(sf::Color(dis(gen), dis(gen), dis(gen)));
+        letter.setFillColor(sf::Color(
+            static_cast<sf::Uint8>(dis(gen)),
+            static_cast<sf::Uint8>(dis(gen)),
+            static_cast<sf::Uint8>(dis(gen)))
+        );
     }
 }
 
@@ -74,7 +83,7 @@ void ColorfulText::setPosition(const sf::Vector2f& position, bool centerHorizont
         yPos = position.y - letters[0].getCharacterSize() / 2.0f;
     }
 
-    for (size_t i = 0; i < letters.size(); i++) {
+    for (size_t i = 0; i < letters.size(); ++i) {
         letters[i].setPosition(xPos + i * letters[0].getCharacterSize() * 0.8f, yPos);
     }
 }

@@ -5,6 +5,7 @@
 #include "GameScreen.h"
 #include "RulesScreen.h"
 #include "ResourceManager.h"
+#include "Screen.h"
 #include "resource.h"
 
 constexpr unsigned int WINDOW_WIDTH = 1280;
@@ -26,27 +27,24 @@ void initializeResources() {
         throw std::runtime_error("Не удалось загрузить текстуру 'background2'");
     }
     if (!rm.loadTexture("numbers", IDR_TEXTURE5)) {
-        throw std::runtime_error("Не удалось загрузить текстуру 'background2'");
+        throw std::runtime_error("Не удалось загрузить текстуру 'numbers'");
     }
     if (!rm.loadMusic("music", IDR_SOUND1)) {
         throw std::runtime_error("Не удалось загрузить звук 'music'");
     }
-
     if (!rm.loadFont("font", IDR_FONT1)) {
         throw std::runtime_error("Не удалось загрузить шрифт 'font'");
     }
     if (!rm.loadFont("font1", IDR_FONT2)) {
         throw std::runtime_error("Не удалось загрузить шрифт 'font1'");
     }
-    
 }
 
-
-
 int main() {
-	system("chcp 1251"); // Установка кодовой страницы windows-1251 в консоли   
+    system("chcp 1251"); // Установка кодовой страницы windows-1251 в консоли   
     try {
         initializeResources();
+
         // Создаем окно игры
         sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), L"Пятнашки");
         window.setFramerateLimit(60); // Ограничение FPS для плавности
@@ -61,10 +59,12 @@ int main() {
         // Создаем игровые экраны
         GameState state = GameState::MENU; // Начальное состояние
         Transition transition(window);
-        GameScreen game(window, state, transition);
-        MainMenu menu(window, state, transition,game);
-       
-        RulesScreen rules(window, state, transition);
+        GameScreen gameScreen(window, state, transition);
+        MainMenu mainMenu(window, state, transition, gameScreen);
+        RulesScreen rulesScreen(window, state, transition);
+
+        // Указатель на текущий экран
+        Screen* currentScreen = &mainMenu;
 
         sf::Clock clock;
 
@@ -77,59 +77,35 @@ int main() {
                 if (event.type == sf::Event::Closed) {
                     window.close();
                 }
-
-                // Передаем событие текущему экрану
-                switch (state) {
-                case GameState::MENU:
-                    menu.handleEvent(event);
-                    break;
-                case GameState::GAME:
-                    game.handleEvent(event);
-                    break;
-                case GameState::RULES:
-                    rules.handleEvent(event);
-                    break;
-                default:
-                    break;
-                }
+                currentScreen->handleEvent(event); // Обрабатываем события текущего экрана
             }
 
             // Обновляем переходы и текущий экран
             bool isTransitioning = transition.update(state, deltaTime); // Проверяем, идет ли переход
-            switch (state) {
-            case GameState::MENU:
-                menu.update(deltaTime);
-                break;
-            case GameState::GAME:
-                game.update(deltaTime);
-                break;
-            case GameState::RULES:
-                rules.update(deltaTime); 
-                break;
-            default:
-                break;
-            }
+            currentScreen->update(deltaTime); // Обновляем текущий экран
 
             // Отрисовка
             window.clear();
+            window.draw(*currentScreen); // Рисуем текущий экран
+            if (isTransitioning) {
+                window.draw(transition); // Отрисовываем переход поверх экрана
+            }
+            window.display();
+
+            // Переключение экранов на основе состояния
             switch (state) {
             case GameState::MENU:
-                window.draw(menu);
+                currentScreen = &mainMenu;
                 break;
             case GameState::GAME:
-                window.draw(game);
+                currentScreen = &gameScreen;
                 break;
             case GameState::RULES:
-                window.draw(rules);
+                currentScreen = &rulesScreen;
                 break;
             default:
                 break;
             }
-            // Отрисовываем переход поверх текущего экрана, если он активен
-            if (isTransitioning) {
-                window.draw(transition);
-            }
-            window.display();
         }
     }
     catch (const std::exception& e) {

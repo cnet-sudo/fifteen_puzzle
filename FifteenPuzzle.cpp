@@ -1,6 +1,7 @@
 #include "FifteenPuzzle.h"
 #include <numeric>
 #include <iostream>
+#include "ResourceManager.h"
 
 FifteenPuzzle::FifteenPuzzle(int tileSize, int gridSize)
     : m_tileSize(tileSize)
@@ -12,9 +13,11 @@ FifteenPuzzle::FifteenPuzzle(int tileSize, int gridSize)
     , m_position(0.f, 0.f)
     , m_isSolved(false)
 {
-    if (!m_font->loadFromFile("arial.ttf")) {
-        std::cerr << "Warning: Failed to load font 'arial.ttf'. Using default font.\n";
-        m_font.reset();
+    ResourceManager& rm = ResourceManager::getInstance();
+    m_font = std::make_shared<sf::Font>(rm.getFont("font"));
+    
+    if (m_font->getInfo().family.empty()) {
+        throw std::runtime_error("Не удалось загрузить шрифт 'font' из ResourceManager");
     }
     shuffleBoard();
 }

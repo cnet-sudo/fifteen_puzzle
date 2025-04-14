@@ -37,7 +37,7 @@ private:
     const int m_tileSize;
     const int m_gridSize;
     std::vector<std::vector<int>> m_board;
-    std::unique_ptr<sf::Font> m_font;
+    std::shared_ptr<sf::Font> m_font;
     int m_emptyX, m_emptyY;
     sf::Vector2f m_position;
     bool m_isSolved;
